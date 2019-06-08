@@ -1,0 +1,43 @@
+{
+  materials: [
+    {
+      name: '_11093_FemaleHead_Smiling_v3default',
+      parameters: [
+        {
+          baseColor: null,
+        },
+        {
+          baseColorTint: [
+            0.59999999999999998,
+            0.59999999999999998,
+            0.59999999999999998,
+            1,
+          ],
+        },
+        {
+          metallic: 0,
+        },
+        {
+          roughness: 1,
+        },
+        {
+          opacity: null,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/obj_material.sfm',
+    },
+  ],
+  model: {
+    attributes: [
+      'Position',
+      'TexCoord',
+      'Orientation',
+    ],
+    collision: {},
+    file: 'sampledata/11093_FemaleHead_Smiling_v3.obj',
+    name: '11093_FemaleHead_Smiling_v3',
+    recenter: 'root',
+    scale: 0.057897000000000003,
+  },
+  version: '0.54:2',
+}

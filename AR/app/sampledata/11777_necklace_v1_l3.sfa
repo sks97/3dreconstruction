@@ -1,0 +1,79 @@
+{
+  materials: [
+    {
+      name: 'necklace_gold',
+      parameters: [
+        {
+          baseColor: null,
+        },
+        {
+          baseColorTint: [
+            0.49409999999999998,
+            0.33329999999999999,
+            0.1255,
+            1,
+          ],
+        },
+        {
+          metallic: 1,
+        },
+        {
+          roughness: 0.27216600000000002,
+        },
+        {
+          opacity: null,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/obj_material.sfm',
+    },
+    {
+      name: 'necklace_stone',
+      parameters: [
+        {
+          baseColor: 'Necklace_stone',
+        },
+        {
+          baseColorTint: [
+            1,
+            1,
+            1,
+            1,
+          ],
+        },
+        {
+          metallic: 1,
+        },
+        {
+          roughness: 0.19611600000000001,
+        },
+        {
+          opacity: 0.69999999999999996,
+        },
+      ],
+      source: 'build/sceneform_sdk/default_materials/obj_material.sfm',
+    },
+  ],
+  model: {
+    attributes: [
+      'Position',
+      'TexCoord',
+      'Orientation',
+    ],
+    collision: {},
+    file: 'sampledata/11777_necklace_v1_l3.obj',
+    name: '11777_necklace_v1_l3',
+    recenter: 'root',
+    scale: 0.05,
+  },
+  samplers: [
+    {
+      file: 'sampledata/Necklace_stone.jpg',
+      name: 'Necklace_stone',
+      params: {
+        usage_type: 'Data',
+      },
+      pipeline_name: 'Necklace_stone.jpg',
+    },
+  ],
+  version: '0.54:2',
+}
