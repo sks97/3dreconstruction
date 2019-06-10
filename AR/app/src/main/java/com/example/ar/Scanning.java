@@ -48,8 +48,11 @@ import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException;
 import java.io.IOException;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -65,9 +68,12 @@ public class Scanning extends AppCompatActivity implements GLSurfaceView.Rendere
     // Rendering. The Renderers are created here, and initialized when the GL surface is created.
     private GLSurfaceView surfaceView;
 
+    private final float MIN_DIST_THRESHOLD = 0.01f;
+
     private boolean installRequested;
     private List<Float[]> positions3D;
-    private List<Integer[]> colorsRGB;
+    private List<Float[]> colorsRGB;
+    private ArrayList<Integer>pids;
 
     private Session session;
     private final SnackbarHelper messageSnackbarHelper = new SnackbarHelper();
@@ -89,8 +95,9 @@ public class Scanning extends AppCompatActivity implements GLSurfaceView.Rendere
         setContentView(R.layout.activity_scan);
         surfaceView = findViewById(R.id.surfaceview);
         displayRotationHelper = new DisplayRotationHelper(/*context=*/ this);
-
-
+        positions3D = new ArrayList<>();
+        colorsRGB = new ArrayList<>();
+        pids=new ArrayList<>();
 
         // Set up renderer.
         surfaceView.setPreserveEGLContextOnPause(true);
@@ -275,9 +282,37 @@ public class Scanning extends AppCompatActivity implements GLSurfaceView.Rendere
             // Visualize tracked points.
             // Use try-with-resources to automatically release the point cloud.
             try (PointCloud pointCloud = frame.acquirePointCloud()) {
+                ;
 
                 pointCloudRenderer.update(pointCloud);
                 pointCloudRenderer.draw(viewmtx, projmtx);
+
+                FloatBuffer points = pointCloud.getPoints();
+                IntBuffer pid=pointCloud.getIds();
+
+                Log.i(TAG, "" + points.limit());
+
+                for (int i = 0; i < points.limit(); i += 4) {
+
+                    float[] w = new float[]{points.get(i), points.get(i + 1), points.get(i + 2)};
+                    /*Integer x=new Integer(pid.get(i/4));
+                    if(pids.contains(x)){
+                        continue;
+                    }
+                    pids.add(x);
+                    */
+
+                    Optional<Float> minDist = positions3D.stream()
+                            .map(vec -> this.squaredDistance(vec, w))
+                            .min((d1, d2) -> d1 - d2 < 0 ? -1 : 1);
+                    if (minDist.orElse(1000f) < MIN_DIST_THRESHOLD * MIN_DIST_THRESHOLD) {
+                        continue;
+                    }
+
+                    positions3D.add(new Float[]{points.get(i), points.get(i + 1), points.get(i + 2)});
+                    Log.d("list", String.valueOf(positions3D.size()));
+                    colorsRGB.add(new Float[]{colorCorrectionRgba[0], colorCorrectionRgba[1], colorCorrectionRgba[2]});
+                }
             }
 
             // No tracking error at this point. If we detected any plane, then hide the
@@ -293,6 +328,14 @@ public class Scanning extends AppCompatActivity implements GLSurfaceView.Rendere
             // Avoid crashing the application due to unhandled exceptions.
             Log.e(TAG, "Exception on the OpenGL thread", t);
         }
+    }
+    private float squaredDistance(Float[] v, float[] w){
+        float sumSquare = 0;
+        if(v.length != w.length) return -1;
+        for(int i =0 ; i < v.length; i++){
+            sumSquare += (v[i] - w[i]) * ((v[i] - w[i]));
+        }
+        return sumSquare;
     }
 
 
