@@ -22,6 +22,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.ArCoreApk;
@@ -57,6 +59,8 @@ import java.util.Optional;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import static android.view.Surface.ROTATION_0;
+
 /**
  * This is a simple example that shows how to create an augmented reality (AR) application using the
  * ARCore API. The application will display any detected planes and will allow the user to tap on a
@@ -67,8 +71,10 @@ public class Scanning extends AppCompatActivity implements GLSurfaceView.Rendere
 
     // Rendering. The Renderers are created here, and initialized when the GL surface is created.
     private GLSurfaceView surfaceView;
-
+    int scanning=0;
+    Integer x;
     private final float MIN_DIST_THRESHOLD = 0.01f;
+    Button b;
 
     private boolean installRequested;
     private List<Float[]> positions3D;
@@ -94,6 +100,8 @@ public class Scanning extends AppCompatActivity implements GLSurfaceView.Rendere
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_scan);
         surfaceView = findViewById(R.id.surfaceview);
+        b=(Button)findViewById(R.id.button);
+        //surfaceView.
         displayRotationHelper = new DisplayRotationHelper(/*context=*/ this);
         positions3D = new ArrayList<>();
         colorsRGB = new ArrayList<>();
@@ -135,6 +143,7 @@ public class Scanning extends AppCompatActivity implements GLSurfaceView.Rendere
 
                 // Create the session.
                 session = new Session(/* context= */ this);
+                //session.setCameraConfig();
 
             } catch (UnavailableArcoreNotInstalledException
                     | UnavailableUserDeclinedInstallationException e) {
@@ -253,6 +262,7 @@ public class Scanning extends AppCompatActivity implements GLSurfaceView.Rendere
             Frame frame = session.update();
             Camera camera = frame.getCamera();
 
+
             //fram.
 
             // If frame is ready, render camera preview image to the GL surface.
@@ -283,44 +293,46 @@ public class Scanning extends AppCompatActivity implements GLSurfaceView.Rendere
             // Use try-with-resources to automatically release the point cloud.
             try (PointCloud pointCloud = frame.acquirePointCloud()) {
                 ;
+                if (scanning==1) {
 
-                pointCloudRenderer.update(pointCloud);
-                pointCloudRenderer.draw(viewmtx, projmtx);
+                    pointCloudRenderer.update(pointCloud);
+                    pointCloudRenderer.draw(viewmtx, projmtx);
 
-                FloatBuffer points = pointCloud.getPoints();
-                IntBuffer pid=pointCloud.getIds();
+                    FloatBuffer points = pointCloud.getPoints();
+                    IntBuffer pid = pointCloud.getIds();
 
-                Log.i(TAG, "" + points.limit());
+                    Log.i(TAG, "" + points.limit());
 
-                for (int i = 0; i < points.limit(); i += 4) {
+                    for (int i = 0; i < points.limit(); i += 4) {
 
-                    float[] w = new float[]{points.get(i), points.get(i + 1), points.get(i + 2)};
-                    /*Integer x=new Integer(pid.get(i/4));
-                    if(pids.contains(x)){
-                        continue;
-                    }
-                    pids.add(x);
-                    */
+                        float[] w = new float[]{points.get(i), points.get(i + 1), points.get(i + 2)};
+                        x = new Integer(pid.get(i / 4));
+                        if (pids.contains(x)) {
+                            continue;
+                        }
+                        pids.add(x);
 
-                    Optional<Float> minDist = positions3D.stream()
+
+                    /*Optional<Float> minDist = positions3D.stream()
                             .map(vec -> this.squaredDistance(vec, w))
                             .min((d1, d2) -> d1 - d2 < 0 ? -1 : 1);
                     if (minDist.orElse(1000f) < MIN_DIST_THRESHOLD * MIN_DIST_THRESHOLD) {
                         continue;
+                    }*/
+
+                        positions3D.add(new Float[]{points.get(i), points.get(i + 1), points.get(i + 2)});
+                        Log.d("list", String.valueOf(positions3D.size()));
+                        colorsRGB.add(new Float[]{colorCorrectionRgba[0], colorCorrectionRgba[1], colorCorrectionRgba[2]});
                     }
-
-                    positions3D.add(new Float[]{points.get(i), points.get(i + 1), points.get(i + 2)});
-                    Log.d("list", String.valueOf(positions3D.size()));
-                    colorsRGB.add(new Float[]{colorCorrectionRgba[0], colorCorrectionRgba[1], colorCorrectionRgba[2]});
                 }
-            }
 
-            // No tracking error at this point. If we detected any plane, then hide the
-            // message UI, otherwise show searchingPlane message.
-            if (hasTrackingPlane()) {
-                messageSnackbarHelper.hide(this);
-            } else {
-                messageSnackbarHelper.showMessage(this, SEARCHING_PLANE_MESSAGE);
+                // No tracking error at this point. If we detected any plane, then hide the
+                // message UI, otherwise show searchingPlane message.
+                if (hasTrackingPlane()) {
+                    messageSnackbarHelper.hide(this);
+                } else {
+                    messageSnackbarHelper.showMessage(this, SEARCHING_PLANE_MESSAGE);
+                }
             }
 
 
@@ -347,6 +359,19 @@ public class Scanning extends AppCompatActivity implements GLSurfaceView.Rendere
             }
         }
         return false;
+    }
+
+    public void start_stop(View view) {
+        if(scanning==0){
+            b.setText("Stop");
+            scanning=1;
+
+        }
+        else{
+            b.setText("Start");
+            scanning=0;
+
+        }
     }
 }
 
